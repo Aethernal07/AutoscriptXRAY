@@ -107,41 +107,66 @@ fi
 # simpan database user
 echo "${user} ${exp} ${uuid}" >> /etc/xray/vless.db
 
-# generate vless link
-vlesslink1="vless://${uuid}@${domain}:${tls}?encryption=none&security=tls&sni=${domain}&type=ws&host=${domain}&path=%2Fvless#${user}"
+# info ISP & kota VPS (untuk kartu akun, gagal lookup = "-")
+geo=$(curl -s --max-time 5 http://ip-api.com/json/)
+ISP=$(echo "$geo" | jq -r '.isp // "-"' 2>/dev/null)
+CITY=$(echo "$geo" | jq -r '.city // "-"' 2>/dev/null)
+ISP=${ISP:-"-"}
+CITY=${CITY:-"-"}
 
-vlesslink2="vless://${uuid}@${domain}:${none}?encryption=none&type=ws&host=${domain}&path=%2Fvless#${user}"
+# generate vless link (format kartu provider)
+vlesslink1="vless://${uuid}@${domain}:${tls}?path=/vless&security=tls&encryption=none&host=${domain}&type=ws&sni=${domain}#${user}"
+
+vlesslink2="vless://${uuid}@${domain}:${none}?path=/vless&security=none&encryption=none&host=${domain}&type=ws#${user}"
 
 vlesslink3="vless://${uuid}@${domain}:${grpc}?mode=gun&security=tls&encryption=none&type=grpc&serviceName=vless-grpc&sni=${domain}#${user}"
 
 clear
 
-echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-echo -e "\E[44;1;39m        XRAY VLESS ACCOUNT       \E[0m"
-echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-echo -e "Remarks        : ${user}"
-echo -e "Domain         : ${domain}"
-echo -e "Wildcard       : (bug.com).${domain}"
-echo -e "Port TLS       : ${tls}"
-echo -e "Port none TLS  : ${none}"
-echo -e "Port gRPC      : ${grpc}"
-echo -e "UUID           : ${uuid}"
-echo -e "Encryption     : none"
-echo -e "Network        : ws / grpc"
-echo -e "Path           : /vless"
-echo -e "ServiceName    : vless-grpc"
-echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-echo -e "Link TLS       :"
-echo -e "${vlesslink1}"
-echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-echo -e "Link none TLS  :"
-echo -e "${vlesslink2}"
-echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-echo -e "Link gRPC      :"
-echo -e "${vlesslink3}"
-echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-echo -e "Expired On     : ${exp}"
-echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+echo "━━━━━━━━━━━━━━━━━━"
+echo "🌐 Host:"
+echo "${domain}"
+echo "🏢 ISP:"
+echo "${ISP}"
+echo "| City:"
+echo "${CITY}"
+echo "🌐 NS:"
+echo "-"
+echo "👤 Username:"
+echo "${user}"
+echo "🔑 UUID:"
+echo "${uuid}"
+echo "⏰ Expired: ${exp}"
+echo "📶 Bandwidth: Unlimited"
+echo "📱 Limit IP: 2 Device"
+echo "━━━━━━━━━━━━━━━━━━"
+echo "🔌 Port TLS:"
+echo "${tls}"
+echo "🔌 Port NTLS:"
+echo "${none}"
+echo "🔌 Port GRPC:"
+echo "${grpc}"
+echo "🔌 Port SlowDNS:"
+echo "5300, 53"
+echo "📍 Path:"
+echo "/vless"
+echo "━━━━━━━━━━━━━━━━━━"
+echo "🚀 SLOWDNS"
+echo "🌐 NS:"
+echo "-"
+echo "🔑 PubKey:"
+echo "-"
+echo "🌐 DNS:"
+echo "1.1.1.1, 8.8.8.8"
+echo "━━━━━━━━━━━━━━━━━━"
+echo "🔗 VLESS TLS"
+echo "${vlesslink1}"
+echo "🔗 VLESS Non-TLS"
+echo "${vlesslink2}"
+echo "🔗 VLESS gRPC"
+echo "${vlesslink3}"
+echo "🔗 VLESS SlowDNS (NTLS 80)"
+echo "${vlesslink2}"
 
 echo ""
 echo "Database User  : /etc/xray/vless.db"
