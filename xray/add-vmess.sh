@@ -16,6 +16,31 @@ grpc="443"
 # input user
 read -rp "Username : " user
 read -rp "Expired (days): " masaaktif
+read -rp "Bug Host / Wildcard (kosongkan = tanpa wildcard, contoh: support.zoom.us): " bug
+
+# normalisasi bug host: buang spasi, skema http(s)://, dan garis miring akhir
+bug=$(echo "$bug" | tr -d '[:space:]' | sed -e 's#^https\?://##' -e 's#/$##')
+
+# alamat + host/SNI default = domain biasa
+add_host="${domain}"
+host_name="${domain}"
+sni_name="${domain}"
+wildcard=""
+
+if [[ -n "$bug" ]]; then
+    # validasi sederhana: hostname, minimal 1 titik, bukan domain sendiri
+    if ! [[ "$bug" =~ ^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$ ]] || [[ "$bug" != *.* ]] || [[ "$bug" == "$domain" ]]; then
+        echo ""
+        echo "ERROR: Bug Host tidak valid! Isi hostname saja, contoh: support.zoom.us"
+        echo "Kosongkan saja kalau tidak pakai wildcard."
+        exit 1
+    fi
+    # format trial: add = bug, host/sni = bug.domain
+    wildcard="${bug}.${domain}"
+    add_host="${bug}"
+    host_name="${wildcard}"
+    sni_name="${wildcard}"
+fi
 
 uuid=$(cat /proc/sys/kernel/random/uuid)
 exp=$(date -d "$masaaktif days" +"%Y-%m-%d")
@@ -112,16 +137,16 @@ vmess_json_tls=$(cat <<EOF
 {
   "v":"2",
   "ps":"${user}",
-  "add":"${domain}",
+  "add":"${add_host}",
   "port":"${tls}",
   "id":"${uuid}",
   "aid":"0",
   "net":"ws",
   "type":"none",
-  "host":"${domain}",
+  "host":"${host_name}",
   "path":"/vmess",
   "tls":"tls",
-  "sni":"${domain}"
+  "sni":"${sni_name}"
 }
 EOF
 )
@@ -131,13 +156,13 @@ vmess_json_none=$(cat <<EOF
 {
   "v":"2",
   "ps":"${user}",
-  "add":"${domain}",
+  "add":"${add_host}",
   "port":"${none}",
   "id":"${uuid}",
   "aid":"0",
   "net":"ws",
   "type":"none",
-  "host":"${domain}",
+  "host":"${host_name}",
   "path":"/vmess",
   "tls":"none"
 }
@@ -153,16 +178,16 @@ vmess_json_grpc=$(cat <<EOF
 {
   "v":"2",
   "ps":"${user}",
-  "add":"${domain}",
+  "add":"${add_host}",
   "port":"${grpc}",
   "id":"${uuid}",
   "aid":"0",
   "net":"grpc",
   "type":"gun",
-  "host":"${domain}",
+  "host":"${host_name}",
   "path":"vmess-grpc",
   "tls":"tls",
-  "sni":"${domain}"
+  "sni":"${sni_name}"
 }
 EOF
 )
@@ -176,7 +201,12 @@ echo -e "\E[44;1;39m        XRAY VMESS ACCOUNT       \E[0m"
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 echo -e "Remarks        : ${user}"
 echo -e "Domain         : ${domain}"
-echo -e "Wildcard       : (bug.com).${domain}"
+if [[ -n "$bug" ]]; then
+echo -e "Bug Host       : ${bug}"
+echo -e "Wildcard       : ${wildcard}"
+else
+echo -e "Wildcard       : - (isi Bug Host saat create untuk aktifkan)"
+fi
 echo -e "Port TLS       : ${tls}"
 echo -e "Port none TLS  : ${none}"
 echo -e "Port gRPC      : ${grpc}"
@@ -199,6 +229,11 @@ echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━�
 echo -e "Expired On     : ${exp}"
 echo -e "\033[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 
+if [[ -n "$bug" ]]; then
+echo -e "CATATAN: pastikan record wildcard * di Cloudflare sudah dibuat"
+echo -e "(* -> IP VPS, DNS-only), kalau belum link wildcard tidak akan konek."
+echo ""
+fi
 echo ""
 echo "Database User  : /etc/xray/vmess.db"
 echo ""

@@ -203,8 +203,6 @@ cp -f wg/m-wg /usr/bin/
 
 cp -f udp/m-zivpn /usr/bin/
 
-cp -f slowdns/m-slowdns /usr/bin/
-
 cp -f tools/tools-menu /usr/bin/
 
 cp -f tools/backup.sh /usr/bin/
@@ -227,7 +225,6 @@ chmod +x /usr/bin/m-trojan
 chmod +x /usr/bin/m-ssws
 chmod +x /usr/bin/m-wg
 chmod +x /usr/bin/m-zivpn
-chmod +x /usr/bin/m-slowdns
 
 chmod +x /usr/bin/tools-menu
 chmod +x /usr/bin/backup.sh
@@ -240,7 +237,6 @@ chmod +x xray/*.sh
 chmod +x wg/*.sh
 chmod +x udp/*.sh
 chmod +x tools/*.sh
-chmod +x slowdns/*.sh
 
 # ==========================================
 # COPY RUNTIME SCRIPT
@@ -248,14 +244,13 @@ chmod +x slowdns/*.sh
 
 info "Menyalin semua submenu ke /etc/autoscriptvpn/..."
 
-mkdir -p /etc/autoscriptvpn/{ssh,xray,wg,udp,tools,slowdns}
+mkdir -p /etc/autoscriptvpn/{ssh,xray,wg,udp,tools}
 
 cp -r ssh/* /etc/autoscriptvpn/ssh/
 cp -r xray/* /etc/autoscriptvpn/xray/
 cp -r wg/* /etc/autoscriptvpn/wg/
 cp -r udp/* /etc/autoscriptvpn/udp/
 cp -r tools/* /etc/autoscriptvpn/tools/
-cp -r slowdns/* /etc/autoscriptvpn/slowdns/
 
 chmod +x /etc/autoscriptvpn/*/*.sh
 
